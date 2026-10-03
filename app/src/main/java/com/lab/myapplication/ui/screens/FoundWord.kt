@@ -63,7 +63,7 @@ fun FoundWord(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Отсортировать")
+            Text("Найти")
         }
 
 
