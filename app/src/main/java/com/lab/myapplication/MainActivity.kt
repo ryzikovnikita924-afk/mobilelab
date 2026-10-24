@@ -12,10 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.lab.myapplication.ui.theme.MyApplicationTheme
+import org.maplibre.android.MapLibre
+import org.maplibre.android.WellKnownTileServer
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MapLibre.getInstance(
+            applicationContext,
+            "",
+            WellKnownTileServer.MapLibre
+        )
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
