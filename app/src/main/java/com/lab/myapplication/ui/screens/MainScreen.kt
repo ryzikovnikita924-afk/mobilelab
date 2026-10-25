@@ -11,20 +11,25 @@ import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.Manifest
 
+
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.lab.myapplication.LocationPermission
+import com.lab.myapplication.ui.map.MapVis
+import com.lab.myapplication.ui.map.MapComponents
+import com.lab.myapplication.ui.map.MapVis
 import org.maplibre.android.camera.CameraPosition
-
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.Style
-
+import org.maplibre.android.plugins.annotation.SymbolManager
+import org.maplibre.android.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.SymbolOptions
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
@@ -34,34 +39,25 @@ fun MainScreen(modifier: Modifier = Modifier) {
         mutableStateOf(false)
     }
 
-    var mapLibreMap by remember {
-        mutableStateOf<MapLibreMap?>(null)
-    }
-
     LocationPermission { granted ->
         hasLocationPermission = granted
     }
-
-    AndroidView(
+    var mapComponents by remember {
+        mutableStateOf<MapComponents?>(null)
+    }
+    MapVis (
         modifier = modifier.fillMaxSize(),
-        factory = { ctx ->
-            MapView(ctx).apply {
-                getMapAsync { map ->
-                    mapLibreMap = map
-
-                    map.setStyle(
-                        Style.Builder()
-                            .fromUri(
-                                "https://tiles.openfreemap.org/styles/liberty"
-                            )
-                    )
-                }
-            }
+        onMapReady = { components ->
+            mapComponents  = components
         }
     )
-    DisposableEffect(hasLocationPermission, mapLibreMap) {
-        val map = mapLibreMap
 
+
+
+    DisposableEffect(hasLocationPermission, mapComponents) {
+        val marker = mapComponents?.marker
+        val map = mapComponents?.map
+        val mapview = mapComponents?.mapView
         if (!hasLocationPermission || map == null) {
             onDispose { }
         } else {
@@ -78,15 +74,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(result: LocationResult) {
                     val location = result.lastLocation ?: return
+                    val position =  LatLng(
+                        location.latitude,
+                        location.longitude
+                    )
+                    marker?.update(location.latitude, location.longitude)
+
 
                     map.animateCamera(
-                        CameraUpdateFactory.newLatLngZoom(
-                            LatLng(
-                                location.latitude,
-                                location.longitude
-                            ),
-                            15.0
-                        ),
+                        CameraUpdateFactory.newLatLngZoom(position, 15.0),
                         1000
                     )
                 }
@@ -111,6 +107,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             }
             onDispose {
                 fusedLocationClient.removeLocationUpdates(locationCallback)
+                marker?.remove()
             }
         }
     }
