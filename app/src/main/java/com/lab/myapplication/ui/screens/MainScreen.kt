@@ -10,6 +10,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.Manifest
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
 
 
 import com.google.android.gms.location.LocationCallback
@@ -18,18 +20,12 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.lab.myapplication.LocationPermission
+import com.lab.myapplication.ui.map.SearchPanel
 import com.lab.myapplication.ui.map.MapVis
 import com.lab.myapplication.ui.map.MapComponents
-import com.lab.myapplication.ui.map.MapVis
-import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.MapLibreMap
-import org.maplibre.android.maps.Style
-import org.maplibre.android.plugins.annotation.SymbolManager
-import org.maplibre.android.plugins.annotation.Symbol
-import org.maplibre.android.plugins.annotation.SymbolOptions
+
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
@@ -45,12 +41,33 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var mapComponents by remember {
         mutableStateOf<MapComponents?>(null)
     }
-    MapVis (
-        modifier = modifier.fillMaxSize(),
-        onMapReady = { components ->
-            mapComponents  = components
-        }
-    )
+    Box(modifier = modifier.fillMaxSize()){
+
+        MapVis (
+            modifier = modifier.fillMaxSize(),
+            onMapReady = { components ->
+                mapComponents  = components
+            }
+        )
+        SearchPanel(
+            modifier = Modifier.align(Alignment.TopCenter),
+            onResultSelected = { result ->
+
+                mapComponents?.map?.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            result.latitude,
+                            result.longitude
+                        ),
+                        16.0
+                    ),
+                    1000
+                )
+            }
+        )
+    }
+
+
 
 
 
