@@ -1,39 +1,53 @@
 package com.lab.myapplication.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.os.Looper
+import android.widget.Toast
+
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
-import android.Manifest
-import android.widget.Toast
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Alignment
-
 
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+
 import com.lab.myapplication.LocationPermission
 import com.lab.myapplication.route.RouteController
-import com.lab.myapplication.route.RouteService.drawRoute
 import com.lab.myapplication.search.SearchRes
-import com.lab.myapplication.ui.map.SearchPanel
-import com.lab.myapplication.ui.map.MapVis
 import com.lab.myapplication.ui.map.MapComponents
+import com.lab.myapplication.ui.map.MapVis
+import com.lab.myapplication.ui.map.SearchPanel
+
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 
-
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    favoritePlaces: SnapshotStateList<SearchRes>,
+    placeToOpenOnMap: SearchRes?,
+    onPlaceHandled: () -> Unit
+) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var hasLocationPermission by remember {
         mutableStateOf(false)
@@ -42,15 +56,15 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var selectedPlace by remember {
         mutableStateOf<SearchRes?>(null)
     }
-    val favoritePlaces = remember {
-        mutableStateListOf<SearchRes>()
-    }
+
     var mapComponents by remember {
         mutableStateOf<MapComponents?>(null)
     }
-    var cameraInitialized by remember(mapComponents) {
+
+    var cameraInitialized by remember {
         mutableStateOf(false)
     }
+
     var currentLocation by remember {
         mutableStateOf<LatLng?>(null)
     }
@@ -58,46 +72,66 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var isBuildingRoute by remember {
         mutableStateOf(false)
     }
+
     var isNavigating by remember {
         mutableStateOf(false)
     }
-    val coroutineScope = rememberCoroutineScope()
-
-
 
     LocationPermission { granted ->
         hasLocationPermission = granted
     }
 
-    Box(modifier = modifier.fillMaxSize()){
 
-        MapVis (
-            modifier = modifier.fillMaxSize(),
+    LaunchedEffect(placeToOpenOnMap, mapComponents) {
+        val place = placeToOpenOnMap ?: return@LaunchedEffect
+        val map = mapComponents?.map ?: return@LaunchedEffect
+
+        selectedPlace = place
+        cameraInitialized = true
+
+        map.animateCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(place.latitude, place.longitude),
+                16.0
+            ),
+            1000
+        )
+
+        onPlaceHandled()
+    }
+
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
+        MapVis(
+            modifier = Modifier.fillMaxSize(),
             onMapReady = { components ->
-                mapComponents  = components
+                mapComponents = components
             }
         )
-        if (!isNavigating){
-        SearchPanel(
-            modifier = Modifier.align(Alignment.TopCenter),
-            onResultSelected = { result ->
-                selectedPlace = result
-
-                cameraInitialized = true
 
 
-                mapComponents?.map?.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            result.latitude,
-                            result.longitude
+        if (!isNavigating) {
+            SearchPanel(
+                modifier = Modifier.align(Alignment.TopCenter),
+                onResultSelected = { result ->
+                    selectedPlace = result
+                    cameraInitialized = true
+
+                    mapComponents?.map?.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(
+                                result.latitude,
+                                result.longitude
+                            ),
+                            16.0
                         ),
-                        16.0
-                    ),
-                    1000
-                )
-            }
-        )}
+                        1000
+                    )
+                }
+            )
+        }
+
         if (!isNavigating) {
             selectedPlace?.let { place ->
                 PlaceDetailsPanel(
@@ -123,17 +157,20 @@ fun MainScreen(modifier: Modifier = Modifier) {
                             ).show()
                         }
                     },
-                    onDrawRoute = {
-                        val destination = selectedPlace
 
+                    onDrawRoute = {
                         RouteController.buildRoute(
                             context = context,
                             coroutineScope = coroutineScope,
                             start = currentLocation,
-                            destinationLatitude = destination?.latitude,
-                            destinationLongitude = destination?.longitude,
+                            destinationLatitude = place.latitude,
+                            destinationLongitude = place.longitude,
                             map = mapComponents?.map,
-                            onLoadingChanged = { isBuildingRoute = it },
+
+                            onLoadingChanged = { loading ->
+                                isBuildingRoute = loading
+                            },
+
                             onRouteBuild = {
                                 isNavigating = true
 
@@ -141,15 +178,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
                                 val map = mapComponents?.map
 
                                 if (position != null && map != null) {
-                                    val cameraPosition = CameraPosition.Builder()
-                                        .target(position)
-                                        .zoom(17.5)
-                                        .tilt(60.0)
-                                        .bearing(map.cameraPosition.bearing)
-                                        .build()
+                                    val cameraPosition =
+                                        CameraPosition.Builder()
+                                            .target(position)
+                                            .zoom(17.5)
+                                            .tilt(60.0)
+                                            .bearing(
+                                                map.cameraPosition.bearing
+                                            )
+                                            .build()
 
                                     map.animateCamera(
-                                        CameraUpdateFactory.newCameraPosition(cameraPosition),
+                                        CameraUpdateFactory
+                                            .newCameraPosition(cameraPosition),
                                         700
                                     )
                                 }
@@ -157,25 +198,27 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         )
                     },
 
-
                     onClose = {
                         selectedPlace = null
                     },
 
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    modifier = Modifier.align(
+                        Alignment.BottomCenter
+                    )
                 )
             }
         }
     }
 
 
-
-
-
-    DisposableEffect(hasLocationPermission, mapComponents, isNavigating) {
+    DisposableEffect(
+        hasLocationPermission,
+        mapComponents,
+        isNavigating
+    ) {
         val marker = mapComponents?.marker
         val map = mapComponents?.map
-        val mapview = mapComponents?.mapView
+
         if (!hasLocationPermission || map == null) {
             onDispose { }
         } else {
@@ -190,45 +233,61 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 .build()
 
             val locationCallback = object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult) {
+                override fun onLocationResult(
+                    result: LocationResult
+                ) {
                     val location = result.lastLocation ?: return
-                    val position =  LatLng(
+
+                    val position = LatLng(
                         location.latitude,
                         location.longitude
                     )
 
                     currentLocation = position
 
-                    marker?.update(location.latitude, location.longitude)
-                    if (isNavigating) {
-                        val bearing = if (
-                            location.hasBearing() && location.speed > 1.0f
-                        ) {
-                            location.bearing.toDouble()
-                        } else {
-                            map.cameraPosition.bearing
-                        }
+                    marker?.update(
+                        location.latitude,
+                        location.longitude
+                    )
 
-                        val cameraPosition = CameraPosition.Builder()
-                            .target(position)
-                            .zoom(17.5)
-                            .tilt(60.0)
-                            .bearing(bearing)
-                            .build()
+                    if (isNavigating) {
+                        val bearing =
+                            if (
+                                location.hasBearing() &&
+                                location.speed > 1.0f
+                            ) {
+                                location.bearing.toDouble()
+                            } else {
+                                map.cameraPosition.bearing
+                            }
+
+                        val cameraPosition =
+                            CameraPosition.Builder()
+                                .target(position)
+                                .zoom(17.5)
+                                .tilt(60.0)
+                                .bearing(bearing)
+                                .build()
 
                         map.animateCamera(
-                            CameraUpdateFactory.newCameraPosition(cameraPosition),
+                            CameraUpdateFactory
+                                .newCameraPosition(cameraPosition),
                             500
-                        )}
-                    else if(!cameraInitialized){
+                        )
+                    } else if (!cameraInitialized) {
                         cameraInitialized = true
+
+                        map.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                position,
+                                15.0
+                            ),
+                            1000
+                        )
                     }
-                    map.animateCamera(
-                        CameraUpdateFactory.newLatLngZoom(position, 15.0),
-                        1000
-                    )
                 }
             }
+
             val fineGranted = ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -247,9 +306,11 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     Looper.getMainLooper()
                 )
             }
+
             onDispose {
-                fusedLocationClient.removeLocationUpdates(locationCallback)
-                marker?.remove()
+                fusedLocationClient.removeLocationUpdates(
+                    locationCallback
+                )
             }
         }
     }
