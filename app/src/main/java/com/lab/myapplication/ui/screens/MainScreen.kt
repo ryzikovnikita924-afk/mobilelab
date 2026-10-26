@@ -26,6 +26,7 @@ import com.lab.myapplication.search.SearchRes
 import com.lab.myapplication.ui.map.SearchPanel
 import com.lab.myapplication.ui.map.MapVis
 import com.lab.myapplication.ui.map.MapComponents
+import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 
@@ -76,6 +77,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 mapComponents  = components
             }
         )
+        if (!isNavigating){
         SearchPanel(
             modifier = Modifier.align(Alignment.TopCenter),
             onResultSelected = { result ->
@@ -95,51 +97,74 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     1000
                 )
             }
-        )
-        selectedPlace?.let { place ->
-            PlaceDetailsPanel(
-                place = place,
-                isFavorite = favoritePlaces.contains(place),
+        )}
+        if (!isNavigating) {
+            selectedPlace?.let { place ->
+                PlaceDetailsPanel(
+                    place = place,
+                    isFavorite = favoritePlaces.contains(place),
 
-                onFavoriteClick = {
-                    if (favoritePlaces.contains(place)) {
-                        favoritePlaces.remove(place)
+                    onFavoriteClick = {
+                        if (favoritePlaces.contains(place)) {
+                            favoritePlaces.remove(place)
 
-                        Toast.makeText(
-                            context,
-                            "Удалено из избранного",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        favoritePlaces.add(place)
+                            Toast.makeText(
+                                context,
+                                "Удалено из избранного",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            favoritePlaces.add(place)
 
-                        Toast.makeText(
-                            context,
-                            "Добавлено в избранное",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                },
-                onDrawRoute = {
-                    val destination = selectedPlace
+                            Toast.makeText(
+                                context,
+                                "Добавлено в избранное",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    onDrawRoute = {
+                        val destination = selectedPlace
 
-                    RouteController.buildRoute(
-                        context = context,
-                        coroutineScope = coroutineScope,
-                        start = currentLocation,
-                        destinationLatitude = destination?.latitude,
-                        destinationLongitude = destination?.longitude,
-                        map = mapComponents?.map,
-                        onLoadingChanged = { isBuildingRoute = it }
-                    )
-                },
+                        RouteController.buildRoute(
+                            context = context,
+                            coroutineScope = coroutineScope,
+                            start = currentLocation,
+                            destinationLatitude = destination?.latitude,
+                            destinationLongitude = destination?.longitude,
+                            map = mapComponents?.map,
+                            onLoadingChanged = { isBuildingRoute = it },
+                            onRouteBuild = {
+                                isNavigating = true
 
-                onClose = {
-                    selectedPlace = null
-                },
+                                val position = currentLocation
+                                val map = mapComponents?.map
 
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+                                if (position != null && map != null) {
+                                    val cameraPosition = CameraPosition.Builder()
+                                        .target(position)
+                                        .zoom(17.5)
+                                        .tilt(60.0)
+                                        .bearing(map.cameraPosition.bearing)
+                                        .build()
+
+                                    map.animateCamera(
+                                        CameraUpdateFactory.newCameraPosition(cameraPosition),
+                                        700
+                                    )
+                                }
+                            }
+                        )
+                    },
+
+
+                    onClose = {
+                        selectedPlace = null
+                    },
+
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
         }
     }
 
@@ -147,7 +172,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 
 
 
-    DisposableEffect(hasLocationPermission, mapComponents) {
+    DisposableEffect(hasLocationPermission, mapComponents, isNavigating) {
         val marker = mapComponents?.marker
         val map = mapComponents?.map
         val mapview = mapComponents?.mapView
@@ -175,8 +200,27 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     currentLocation = position
 
                     marker?.update(location.latitude, location.longitude)
+                    if (isNavigating) {
+                        val bearing = if (
+                            location.hasBearing() && location.speed > 1.0f
+                        ) {
+                            location.bearing.toDouble()
+                        } else {
+                            map.cameraPosition.bearing
+                        }
 
-                    if(!cameraInitialized){
+                        val cameraPosition = CameraPosition.Builder()
+                            .target(position)
+                            .zoom(17.5)
+                            .tilt(60.0)
+                            .bearing(bearing)
+                            .build()
+
+                        map.animateCamera(
+                            CameraUpdateFactory.newCameraPosition(cameraPosition),
+                            500
+                        )}
+                    else if(!cameraInitialized){
                         cameraInitialized = true
                     }
                     map.animateCamera(

@@ -16,7 +16,8 @@ object RouteController {
         destinationLatitude: Double?,
         destinationLongitude: Double?,
         map: MapLibreMap?,
-        onLoadingChanged: (Boolean) -> Unit
+        onLoadingChanged: (Boolean) -> Unit,
+        onRouteBuild : () -> Unit
     ) {
         when {
             start == null -> {
@@ -61,7 +62,7 @@ object RouteController {
                             map = map,
                             coordinates = route.coordinates
                         )
-
+                        onRouteBuild()
 
                         val distanceKm = route.distanceMeters / 1000.0
                         val durationMinutes =
