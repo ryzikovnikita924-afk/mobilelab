@@ -16,7 +16,7 @@ object RouteService {
 
     private const val SOURCE_ID = "route-source"
     private const val LAYER_ID = "route-layer"
-
+    private var savedCoordinates: List<Pair<Double, Double>> = emptyList()
     fun drawRoute(
         map: MapLibreMap,
         coordinates: List<Pair<Double, Double>>
@@ -25,6 +25,9 @@ object RouteService {
 
         if (coordinates.size < 2) return
 
+        savedCoordinates = coordinates.toList()
+
+        renderRoute(map, savedCoordinates)
 
         val points = coordinates.map { (latitude, longitude) ->
             Point.fromLngLat(longitude, latitude)
@@ -55,8 +58,51 @@ object RouteService {
             )
         }
     }
+    fun restoreRoute(map: MapLibreMap) {
+        if (savedCoordinates.size >= 2) {
+            renderRoute(map, savedCoordinates)
+        }
+    }
+
+    private fun renderRoute(
+        map: MapLibreMap,
+        coordinates: List<Pair<Double, Double>>
+    ) {
+        val style = map.style ?: return
+
+        val points = coordinates.map { (latitude, longitude) ->
+            Point.fromLngLat(longitude, latitude)
+        }
+
+        val lineString = LineString.fromLngLats(points)
+
+        val featureCollection = FeatureCollection.fromFeatures(
+            arrayOf(Feature.fromGeometry(lineString))
+        )
+
+        val source = style.getSourceAs<GeoJsonSource>(SOURCE_ID)
+
+        if (source != null) {
+            source.setGeoJson(featureCollection)
+        } else {
+            style.addSource(
+                GeoJsonSource(SOURCE_ID, featureCollection)
+            )
+
+            style.addLayer(
+                LineLayer(LAYER_ID, SOURCE_ID).withProperties(
+                    lineColor(Color.rgb(0, 150, 136)),
+                    lineWidth(5f)
+                )
+            )
+        }
+    }
+
 
     fun clearRoute(map: MapLibreMap) {
+
+        savedCoordinates = emptyList()
+
         val style = map.style ?: return
 
         if (style.getLayer(LAYER_ID) != null) {

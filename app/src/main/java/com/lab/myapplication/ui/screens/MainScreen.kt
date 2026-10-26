@@ -8,6 +8,10 @@ import android.widget.Toast
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +24,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 
 import com.google.android.gms.location.LocationCallback
@@ -30,6 +35,7 @@ import com.google.android.gms.location.Priority
 
 import com.lab.myapplication.LocationPermission
 import com.lab.myapplication.route.RouteController
+import com.lab.myapplication.route.RouteService
 import com.lab.myapplication.search.SearchRes
 import com.lab.myapplication.ui.map.MapComponents
 import com.lab.myapplication.ui.map.MapVis
@@ -44,7 +50,9 @@ fun MainScreen(
     modifier: Modifier = Modifier,
     favoritePlaces: SnapshotStateList<SearchRes>,
     placeToOpenOnMap: SearchRes?,
-    onPlaceHandled: () -> Unit
+    onPlaceHandled: () -> Unit,
+    isNavigating: Boolean,
+    onNavigatingChange: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -73,9 +81,6 @@ fun MainScreen(
         mutableStateOf(false)
     }
 
-    var isNavigating by remember {
-        mutableStateOf(false)
-    }
 
     LocationPermission { granted ->
         hasLocationPermission = granted
@@ -107,9 +112,42 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize(),
             onMapReady = { components ->
                 mapComponents = components
+
+                RouteService.restoreRoute(components.map)
             }
         )
+        if (isNavigating) {
+            Button(
+                onClick = {
+                    mapComponents?.map?.let { map ->
+                        RouteService.clearRoute(map)
+                    }
 
+                    onNavigatingChange(false)
+                    isBuildingRoute = false
+                    selectedPlace = null
+
+                    currentLocation?.let { position ->
+                        mapComponents?.map?.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                position,
+                                15.0
+                            ),
+                            700
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 12.dp
+                    )
+            ) {
+                Text("Завершить маршрут")
+            }
+        }
 
         if (!isNavigating) {
             SearchPanel(
@@ -172,7 +210,7 @@ fun MainScreen(
                             },
 
                             onRouteBuild = {
-                                isNavigating = true
+                                onNavigatingChange(true)
 
                                 val position = currentLocation
                                 val map = mapComponents?.map

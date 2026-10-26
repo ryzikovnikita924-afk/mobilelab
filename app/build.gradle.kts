@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation("org.maplibre.gl:android-plugin-annotation:4.0.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
