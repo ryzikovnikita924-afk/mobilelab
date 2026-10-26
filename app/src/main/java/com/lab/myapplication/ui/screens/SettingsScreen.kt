@@ -1,3 +1,4 @@
+
 package com.lab.myapplication.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.lab.myapplication.R
 
 @Composable
 fun SettingsScreen(
@@ -33,7 +36,7 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = if (language == "ru") "Настройки" else "Settings",
+            text = stringResource(R.string.settings),
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -45,10 +48,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = if (language == "ru")
-                        "Язык приложения"
-                    else
-                        "App language",
+                    text = stringResource(R.string.language),
                     style = MaterialTheme.typography.titleMedium
                 )
 
@@ -62,7 +62,7 @@ fun SettingsScreen(
                         selected = language == "ru",
                         onClick = { onLanguageChange("ru") }
                     )
-                    Text("Русский")
+                    Text(stringResource(R.string.russian))
                 }
 
                 Row(
@@ -73,7 +73,7 @@ fun SettingsScreen(
                         selected = language == "en",
                         onClick = { onLanguageChange("en") }
                     )
-                    Text("English")
+                    Text(stringResource(R.string.english))
                 }
             }
         }
@@ -92,20 +92,17 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (language == "ru")
-                            "Тема оформления"
-                        else
-                            "Appearance",
+                        text = stringResource(R.string.theme),
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = if (language == "ru") {
-                            if (darkTheme) "Тёмная тема" else "Светлая тема"
+                        text = if (darkTheme) {
+                            stringResource(R.string.dark_theme)
                         } else {
-                            if (darkTheme) "Dark theme" else "Light theme"
+                            stringResource(R.string.light_theme)
                         },
                         color = MaterialTheme.colorScheme.onSurface
                     )

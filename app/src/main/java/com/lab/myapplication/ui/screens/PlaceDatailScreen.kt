@@ -1,6 +1,5 @@
 package com.lab.myapplication.ui.screens
 
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,9 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-
+import androidx.compose.ui.res.stringResource
+import com.lab.myapplication.R
 import com.lab.myapplication.search.SearchRes
 
 @Composable
@@ -30,10 +29,8 @@ fun PlaceDetailsPanel(
     onDrawRoute: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
@@ -55,7 +52,7 @@ fun PlaceDetailsPanel(
                     onClick = onDrawRoute,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Маршрут")
+                    Text(stringResource(R.string.build_route))
                 }
 
                 OutlinedButton(
@@ -63,17 +60,17 @@ fun PlaceDetailsPanel(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        if (isFavorite) {
-                            "В избранном ★"
+                        text = if (isFavorite) {
+                            stringResource(R.string.in_favorites)
                         } else {
-                            "В избранное ☆"
+                            stringResource(R.string.add_to_favorites)
                         }
                     )
                 }
             }
 
             TextButton(onClick = onClose) {
-                Text("Закрыть")
+                Text(stringResource(R.string.close))
             }
         }
     }

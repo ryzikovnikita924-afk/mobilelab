@@ -1,3 +1,22 @@
 <resources>
-    <string name="app_name">My Application</string>
+
+    <string name="app_name">DriveNav</string>
+
+    <string name="settings">Настройки</string>
+    <string name="language">Язык приложения</string>
+    <string name="russian">Русский</string>
+    <string name="english">Английскийh</string>
+    <string name="theme">Тема оформления</string>
+    <string name="dark_theme">Тёмная тема</string>
+    <string name="light_theme">Светлая тема</string>
+    <string name="build_route">Маршрут</string>
+    <string name="in_favorites">В избранном ★</string>
+    <string name="add_to_favorites">В избранное ☆</string>
+    <string name="close">Закрыть</string>
+    <string name="finish_route">Завершить маршрут</string>
+    <string name="removed_from_favorites">Удалено из избранного</string>
+    <string name="added_to_favorites">Добавлено в избранное</string>
+    <string name="no_favorites">У вас пока нет избранных мест</string>
+    <string name="coordinates">Координаты: %1$s, %2$s</string>
+    <string name="favorites">Избранное</string>
 </resources>

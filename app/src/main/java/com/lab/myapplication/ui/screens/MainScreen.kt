@@ -20,10 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 
@@ -34,6 +34,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 
 import com.lab.myapplication.LocationPermission
+import com.lab.myapplication.R
 import com.lab.myapplication.route.RouteController
 import com.lab.myapplication.route.RouteService
 import com.lab.myapplication.search.SearchRes
@@ -48,7 +49,8 @@ import org.maplibre.android.geometry.LatLng
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    favoritePlaces: SnapshotStateList<SearchRes>,
+    favoritePlaces: List<SearchRes>,
+    onFavoriteToggle: (SearchRes) -> Unit,
     placeToOpenOnMap: SearchRes?,
     onPlaceHandled: () -> Unit,
     isNavigating: Boolean,
@@ -81,11 +83,9 @@ fun MainScreen(
         mutableStateOf(false)
     }
 
-
     LocationPermission { granted ->
         hasLocationPermission = granted
     }
-
 
     LaunchedEffect(placeToOpenOnMap, mapComponents) {
         val place = placeToOpenOnMap ?: return@LaunchedEffect
@@ -112,10 +112,10 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize(),
             onMapReady = { components ->
                 mapComponents = components
-
                 RouteService.restoreRoute(components.map)
             }
         )
+
         if (isNavigating) {
             Button(
                 onClick = {
@@ -145,7 +145,7 @@ fun MainScreen(
                         vertical = 12.dp
                     )
             ) {
-                Text("Завершить маршрут")
+                Text(stringResource(R.string.finish_route))
             }
         }
 
@@ -177,23 +177,13 @@ fun MainScreen(
                     isFavorite = favoritePlaces.contains(place),
 
                     onFavoriteClick = {
-                        if (favoritePlaces.contains(place)) {
-                            favoritePlaces.remove(place)
-
-                            Toast.makeText(
-                                context,
-                                "Удалено из избранного",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            favoritePlaces.add(place)
-
-                            Toast.makeText(
-                                context,
-                                "Добавлено в избранное",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        val alreadyFavorite = favoritePlaces.any {
+                            it.latitude == place.latitude &&
+                                    it.longitude == place.longitude
                         }
+
+                        onFavoriteToggle(place)
+
                     },
 
                     onDrawRoute = {
@@ -247,7 +237,6 @@ fun MainScreen(
             }
         }
     }
-
 
     DisposableEffect(
         hasLocationPermission,

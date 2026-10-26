@@ -1,5 +1,7 @@
 package com.lab.myapplication
 
+import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -25,14 +27,30 @@ import com.lab.myapplication.ui.screens.MainScreen
 import com.lab.myapplication.ui.screens.SettingsScreen
 import com.lab.myapplication.ui.theme.MyApplicationTheme
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.core.os.LocaleListCompat
+import com.lab.myapplication.data.AppDatabase
+import com.lab.myapplication.data.toFavoriteEntity
+import com.lab.myapplication.data.toSearchRes
 import kotlinx.coroutines.launch
 
 @Composable
 fun AppRoot(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
-    val favoritePlaces = remember {
-        mutableStateListOf<SearchRes>()
+    val database = remember {
+        AppDatabase.getDatabase(context)
+    }
+
+    val favoriteDao = remember {
+        database.favoriteDao()
+    }
+
+    val favoriteEntities by favoriteDao
+        .getAllFavorites()
+        .collectAsState(initial = emptyList())
+
+    val favoritePlaces = remember(favoriteEntities) {
+        favoriteEntities.map { it.toSearchRes() }
     }
     var isNavigating by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -75,10 +93,21 @@ fun AppRoot(modifier: Modifier = Modifier) {
                 composable(AppScreens.MAP) {
                     MainScreen(
                         favoritePlaces = favoritePlaces,
-                        placeToOpenOnMap = placeToOpenOnMap,
-                        onPlaceHandled = {
-                            placeToOpenOnMap = null
+                        onFavoriteToggle = { place ->
+                            coroutineScope.launch {
+                                val favoriteId = "${place.latitude},${place.longitude}"
+
+                                if (favoritePlaces.any {
+                                        "${it.latitude},${it.longitude}" == favoriteId
+                                    }) {
+                                    favoriteDao.deleteFavorite(favoriteId)
+                                } else {
+                                    favoriteDao.insertFavorite(place.toFavoriteEntity())
+                                }
+                            }
                         },
+                        placeToOpenOnMap = placeToOpenOnMap,
+                        onPlaceHandled = { placeToOpenOnMap = null },
                         isNavigating = isNavigating,
                         onNavigatingChange = { isNavigating = it }
                     )
@@ -108,6 +137,16 @@ fun AppRoot(modifier: Modifier = Modifier) {
                         language = settings.language,
                         darkTheme = settings.darkTheme,
                         onLanguageChange = { language ->
+                            AppCompatDelegate.setApplicationLocales(
+                                LocaleListCompat.forLanguageTags(language)
+                            )
+                            Log.d(
+                                "LANGUAGE_DEBUG",
+                                "Selected: $language, applied: ${
+                                    AppCompatDelegate.getApplicationLocales().toLanguageTags()
+                                }"
+                            )
+
                             coroutineScope.launch {
                                 preferences.setLanguage(language)
                             }
