@@ -12,11 +12,6 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.Style
 import org.maplibre.android.plugins.annotation.SymbolManager
 
-class MapComponents(
-    val mapView: MapView,
-    val map: MapLibreMap,
-    val marker: LocationMarker
-)
 
 @Composable
 fun MapVis(

@@ -20,6 +20,8 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.lab.myapplication.LocationPermission
+import com.lab.myapplication.route.RouteController
+import com.lab.myapplication.route.RouteService.drawRoute
 import com.lab.myapplication.search.SearchRes
 import com.lab.myapplication.ui.map.SearchPanel
 import com.lab.myapplication.ui.map.MapVis
@@ -48,6 +50,17 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var cameraInitialized by remember(mapComponents) {
         mutableStateOf(false)
     }
+    var currentLocation by remember {
+        mutableStateOf<LatLng?>(null)
+    }
+
+    var isBuildingRoute by remember {
+        mutableStateOf(false)
+    }
+    var isNavigating by remember {
+        mutableStateOf(false)
+    }
+    val coroutineScope = rememberCoroutineScope()
 
 
 
@@ -107,6 +120,19 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         ).show()
                     }
                 },
+                onDrawRoute = {
+                    val destination = selectedPlace
+
+                    RouteController.buildRoute(
+                        context = context,
+                        coroutineScope = coroutineScope,
+                        start = currentLocation,
+                        destinationLatitude = destination?.latitude,
+                        destinationLongitude = destination?.longitude,
+                        map = mapComponents?.map,
+                        onLoadingChanged = { isBuildingRoute = it }
+                    )
+                },
 
                 onClose = {
                     selectedPlace = null
@@ -145,9 +171,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
                         location.latitude,
                         location.longitude
                     )
+
+                    currentLocation = position
+
                     marker?.update(location.latitude, location.longitude)
 
-
+                    if(!cameraInitialized){
+                        cameraInitialized = true
+                    }
                     map.animateCamera(
                         CameraUpdateFactory.newLatLngZoom(position, 15.0),
                         1000

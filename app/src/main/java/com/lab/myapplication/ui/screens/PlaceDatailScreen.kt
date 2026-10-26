@@ -27,6 +27,7 @@ fun PlaceDetailsPanel(
     isFavorite: Boolean,
     onFavoriteClick: () -> Unit,
     onClose: () -> Unit,
+    onDrawRoute: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -51,11 +52,7 @@ fun PlaceDetailsPanel(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = {
-
-
-
-                    },
+                    onClick = onDrawRoute,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Маршрут")
