@@ -19,4 +19,7 @@
     <string name="no_favorites">У вас пока нет избранных мест</string>
     <string name="coordinates">Координаты: %1$s, %2$s</string>
     <string name="favorites">Избранное</string>
+    <string name="nav_map">Карта</string>
+    <string name="nav_favorites">Избранное</string>
+    <string name="nav_settings">Настройки</string>
 </resources>

@@ -63,7 +63,42 @@ object RouteService {
             renderRoute(map, savedCoordinates)
         }
     }
+    fun updateRemainingRoute(
+        map: MapLibreMap,
+        currentLatitude: Double,
+        currentLongitude: Double
+    ) {
+        if (savedCoordinates.size < 2) return
 
+        val nearestIndex = savedCoordinates.indices.minByOrNull { index ->
+            val (latitude, longitude) = savedCoordinates[index]
+
+            val latDiff = latitude - currentLatitude
+            val lonDiff = longitude - currentLongitude
+
+            latDiff * latDiff + lonDiff * lonDiff
+        } ?: return
+
+        val remainingCoordinates = savedCoordinates.drop(nearestIndex)
+
+        if (remainingCoordinates.size < 2) {
+            clearRoute(map)
+            return
+        }
+
+        val points = remainingCoordinates.map { (latitude, longitude) ->
+            Point.fromLngLat(longitude, latitude)
+        }
+
+        val lineString = LineString.fromLngLats(points)
+
+        val featureCollection = FeatureCollection.fromFeatures(
+            arrayOf(Feature.fromGeometry(lineString))
+        )
+
+        map.style?.getSourceAs<GeoJsonSource>(SOURCE_ID)
+            ?.setGeoJson(featureCollection)
+    }
     private fun renderRoute(
         map: MapLibreMap,
         coordinates: List<Pair<Double, Double>>

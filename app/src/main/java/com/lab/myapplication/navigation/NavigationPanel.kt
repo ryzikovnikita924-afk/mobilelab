@@ -5,6 +5,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.lab.myapplication.R
 
 @Composable
 fun NavigationPanel(
@@ -21,7 +23,7 @@ fun NavigationPanel(
                 Text("M")
             },
             label = {
-                Text("Карта")
+                Text(stringResource(R.string.nav_map))
             }
         )
 
@@ -34,7 +36,7 @@ fun NavigationPanel(
                 Text("F")
             },
             label = {
-                Text("Избранное")
+                Text(stringResource(R.string.nav_favorites))
             }
         )
 
@@ -47,7 +49,7 @@ fun NavigationPanel(
                 Text("S")
             },
             label = {
-                Text("Настройки")
+                Text(stringResource(R.string.nav_settings))
             }
         )
     }

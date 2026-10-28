@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -58,7 +59,19 @@ fun AppRoot(modifier: Modifier = Modifier) {
     val settings by preferences.settings.collectAsState(
         initial = UserSettings()
     )
+    LaunchedEffect(settings.language) {
+        Log.d("LANGUAGE_DEBUG", "Saved language: ${settings.language}")
 
+        val locales = LocaleListCompat.forLanguageTags(settings.language)
+        AppCompatDelegate.setApplicationLocales(locales)
+
+        Log.d(
+            "LANGUAGE_DEBUG",
+            "Applied language: ${
+                AppCompatDelegate.getApplicationLocales().toLanguageTags()
+            }"
+        )
+    }
     var placeToOpenOnMap by remember {
         mutableStateOf<SearchRes?>(null)
     }
@@ -137,16 +150,6 @@ fun AppRoot(modifier: Modifier = Modifier) {
                         language = settings.language,
                         darkTheme = settings.darkTheme,
                         onLanguageChange = { language ->
-                            AppCompatDelegate.setApplicationLocales(
-                                LocaleListCompat.forLanguageTags(language)
-                            )
-                            Log.d(
-                                "LANGUAGE_DEBUG",
-                                "Selected: $language, applied: ${
-                                    AppCompatDelegate.getApplicationLocales().toLanguageTags()
-                                }"
-                            )
-
                             coroutineScope.launch {
                                 preferences.setLanguage(language)
                             }

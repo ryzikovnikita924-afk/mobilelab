@@ -19,4 +19,7 @@
     <string name="favorites">Favorites</string>
     <string name="no_favorites">You dont have any favorite places yet</string>
     <string name="coordinates">Coordinates: %1$s, %2$s</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_settings">Settings</string>
 </resources>

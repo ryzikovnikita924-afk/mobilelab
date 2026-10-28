@@ -1,5 +1,6 @@
-package com.lab.myapplication.ui.map
+package com.lab.myapplication.search
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,8 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lab.myapplication.search.SearchRes
-import com.lab.myapplication.search.SearchService
 import kotlinx.coroutines.delay
 
 @Composable
@@ -46,7 +45,7 @@ fun SearchPanel(
 
         try {
             results = SearchService.search(query.trim())
-            android.util.Log.d(
+            Log.d(
                 "SearchAPI",
                 "Запрос: $query, результатов: ${results.size}"
             )
@@ -54,7 +53,7 @@ fun SearchPanel(
                 error = "Ничего не найдено"
             }
         } catch (e: Exception) {
-            android.util.Log.e("SearchAPI", "Ошибка поиска", e)
+            Log.e("SearchAPI", "Ошибка поиска", e)
             error = "Ошибка поиска. Проверьте подключение к интернету."
         } finally {
             loading = false

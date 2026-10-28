@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Looper
-import android.widget.Toast
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,7 +39,8 @@ import com.lab.myapplication.route.RouteService
 import com.lab.myapplication.search.SearchRes
 import com.lab.myapplication.ui.map.MapComponents
 import com.lab.myapplication.ui.map.MapVis
-import com.lab.myapplication.ui.map.SearchPanel
+import com.lab.myapplication.search.SearchPanel
+import com.lab.myapplication.ui.PlaceDetailsPanel
 
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -121,21 +121,24 @@ fun MainScreen(
                 onClick = {
                     mapComponents?.map?.let { map ->
                         RouteService.clearRoute(map)
+                        currentLocation?.let { position ->
+                            map.animateCamera(
+                                CameraUpdateFactory.newCameraPosition(
+                                    CameraPosition.Builder()
+                                        .target(position)
+                                        .zoom(15.0)
+                                        .tilt(0.0)
+                                        .bearing(0.0)
+                                        .build()
+                                ),
+                                700
+                            )
+                        }
                     }
 
                     onNavigatingChange(false)
                     isBuildingRoute = false
                     selectedPlace = null
-
-                    currentLocation?.let { position ->
-                        mapComponents?.map?.animateCamera(
-                            CameraUpdateFactory.newLatLngZoom(
-                                position,
-                                15.0
-                            ),
-                            700
-                        )
-                    }
                 },
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -276,6 +279,14 @@ fun MainScreen(
                         location.latitude,
                         location.longitude
                     )
+
+                    if (isNavigating) {
+                        RouteService.updateRemainingRoute(
+                            map = map,
+                            currentLatitude = location.latitude,
+                            currentLongitude = location.longitude
+                        )
+                    }
 
                     if (isNavigating) {
                         val bearing =
