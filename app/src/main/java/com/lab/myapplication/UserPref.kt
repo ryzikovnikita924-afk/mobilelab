@@ -1,6 +1,8 @@
 package com.lab.myapplication
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -31,6 +33,9 @@ class UserPreferences(context: Context) {
     suspend fun setLanguage(language: String) {
         dataStore.edit { preferences ->
             preferences[LANGUAGE] = language
+            AppCompatDelegate.setApplicationLocales(
+                LocaleListCompat.forLanguageTags(language)
+            )
         }
     }
 
