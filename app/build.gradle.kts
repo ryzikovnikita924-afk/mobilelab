@@ -47,6 +47,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("org.maplibre.gl:android-plugin-annotation:4.0.0")
     implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)

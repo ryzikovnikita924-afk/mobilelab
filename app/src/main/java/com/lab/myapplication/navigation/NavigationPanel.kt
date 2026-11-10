@@ -7,6 +7,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.lab.myapplication.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+
+
 
 @Composable
 fun NavigationPanel(
@@ -20,7 +27,10 @@ fun NavigationPanel(
                 onNavigate(AppScreens.MAP)
             },
             icon = {
-                Text("M")
+                Icon(
+                    imageVector = Icons.Filled.Map,
+                    contentDescription = "Карта"
+                )
             },
             label = {
                 Text(stringResource(R.string.nav_map))
@@ -33,7 +43,10 @@ fun NavigationPanel(
                 onNavigate(AppScreens.FAVORITES)
             },
             icon = {
-                Text("F")
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Избранное"
+                )
             },
             label = {
                 Text(stringResource(R.string.nav_favorites))
@@ -46,7 +59,10 @@ fun NavigationPanel(
                 onNavigate(AppScreens.SETTINGS)
             },
             icon = {
-                Text("S")
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Настройки"
+                )
             },
             label = {
                 Text(stringResource(R.string.nav_settings))
