@@ -39,10 +39,12 @@ android {
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation("androidx.room:room-runtime:2.7.2")
     implementation("androidx.room:room-ktx:2.7.2")
+    implementation(libs.androidx.ui)
     ksp("androidx.room:room-compiler:2.7.2")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("org.maplibre.gl:android-plugin-annotation:4.0.0")

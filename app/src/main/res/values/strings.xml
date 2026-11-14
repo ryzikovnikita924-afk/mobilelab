@@ -22,4 +22,9 @@
     <string name="nav_map">Карта</string>
     <string name="nav_favorites">Избранное</string>
     <string name="nav_settings">Настройки</string>
+    <string name="search_label">Поиск места</string>
+    <string name="search_placeholder">Введите адрес</string>
+    <string name="clear_search">Очистить поиск</string>
+    <string name="search_not_found">Ничего не найдено</string>
+    <string name="search_error">Ошибка поиска. Проверьте подключение к интернету.</string>
 </resources>
